@@ -33,11 +33,11 @@ def process_data():
         f_src_data.close()
         f_dst_data.close()
 
-        np_data = np.genfromtxt(dist_file, dtype='S12, i6, i6, i12, i12, f12, f12, f6, f6, i12, i12, S12, S12',
+        np_data = np.genfromtxt(dist_file, dtype='S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12',
                              delimiter=',', skip_header=1, names=columns)
     else:
         #if line count less than max point number, read the srouce file
-        np_data = np.genfromtxt(source_file, dtype='S12, i6, i6, i12, i12, f8, f8, f6, f6, i12, i12, S12, S12',
+        np_data = np.genfromtxt(source_file, dtype='S12, i4, i4, i4, i4, f8, f8, f6, f6, i4, i4, S12, S12',
                              delimiter=',', skip_header=1, names=columns)
     #print np_data
     return np_data
