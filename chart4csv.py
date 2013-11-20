@@ -41,6 +41,7 @@ def process_data():
         #if line count less than max point number, read the srouce file
         np_data = np.genfromtxt(source_file, dtype='S12, i4, i4, i4, i4, f8, f8, f6, f6, i4, i4, S12, S12',
                              delimiter=',', skip_header=1, names=columns, invalid_raise=False)
+
     #print np_data
     return np_data
 
