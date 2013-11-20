@@ -50,11 +50,6 @@ def draw_chart(np_data, title, x_column, y_column, unit=''):
     fig = plt.figure()
     fig.set_size_inches(16, 9)
 
-    # set x axis label text with timestamp
-    #plt.xticks(arange(len(np_data)), np_data['timestamp'], rotation=90)
-    #plt.xticks(arange(len(np_data)), times, rotation=90)
-    #plt.xlim(0, 110)
-
     ax1 = fig.add_subplot(111)
     if unit:
         ax1.set_title(title + '(' + unit + ')')
@@ -120,9 +115,6 @@ def draw_chart_percent(np_data, title, x_column, y_column):
     #display the legend label
     plt.legend()
 
-    #display the figure
-    #plt.show()
-
     # save as png
     plt.savefig(title + '.png')
     print 'saved chart to ' + title + '.png'
@@ -130,8 +122,6 @@ def draw_chart_percent(np_data, title, x_column, y_column):
 def process_x_labels(ax1, t_temp):
     labels = [item.get_text() for item in ax1.get_xticklabels()]
     #print 'labels: ', labels
-
-    #print t_temp
 
     idx = 0
     times = []
