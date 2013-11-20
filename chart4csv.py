@@ -36,11 +36,11 @@ def process_data():
         f_dst_data.close()
 
         np_data = np.genfromtxt(dist_file, dtype='S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12',
-                             delimiter=',', skip_header=1, names=columns)
+                             delimiter=',', skip_header=1, names=columns, invalid_raise=False)
     else:
         #if line count less than max point number, read the srouce file
         np_data = np.genfromtxt(source_file, dtype='S12, i4, i4, i4, i4, f8, f8, f6, f6, i4, i4, S12, S12',
-                             delimiter=',', skip_header=1, names=columns)
+                             delimiter=',', skip_header=1, names=columns, invalid_raise=False)
     #print np_data
     return np_data
 
@@ -92,9 +92,15 @@ def draw_chart_percent(np_data, title, x_column, y_column):
     x_temp = []
     y_temp = []
     for t in np_data[x_column]:
-        x_temp.append(t.replace('%', ' ').strip())
+        if t is None or t == 'N/A':
+            x_temp.append(0)
+        else:    
+            x_temp.append(t.replace('%', ' ').strip())
     for t in np_data[y_column]:
-        y_temp.append(t.replace('%', ' ').strip())
+        if t is None or t == 'N/A':
+            y_temp.append(0)   
+        else:
+            y_temp.append(t.replace('%', ' ').strip())
 
     #set y axis max value is 101
     plt.ylim(ymin = 90, ymax = 101)
@@ -118,6 +124,7 @@ def draw_chart_percent(np_data, title, x_column, y_column):
 
     # save as png
     plt.savefig(title + '.png')
+    print 'saved chart to ' + title + '.png'
 
 def process_x_labels(ax1, t_temp):
     labels = [item.get_text() for item in ax1.get_xticklabels()]
