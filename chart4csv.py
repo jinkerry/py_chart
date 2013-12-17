@@ -1,13 +1,20 @@
+#encoding=utf-8
 __author__ = 'jinfeng'
 
 import numpy as np
 import matplotlib as mpl
+#关闭X-window
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 def process_data():
+    #源文件
     source_file = 's3-yixin.csv'
-    dist_file = 'd3.csv'
+    #当文件行数大于1000行，存放处理后的临时文件
+    tmp_file = 'd3.csv'
+    #交给numpy处理的数据文件
+    dist_file = ''
+    #每一张图最多画1000个数据点
     maxPoints = 1000
 
     count = -1
@@ -21,6 +28,8 @@ def process_data():
 
     columns = ['timestamp', 'op_read', 'op_write', 'byte_read', 'byte_write', 'avg_read', 'avg_write',
                'throughout_read', 'throughout_write', 'band_read', 'band_write', 'succ_read', 'succ_write']
+    #S=string, i=int, f=float           
+    column_types = 'S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12'         
 
     row = 0
     # if point more than lines, choose part of lines, write to dist csv file
@@ -35,19 +44,20 @@ def process_data():
         f_src_data.close()
         f_dst_data.close()
 
-        np_data = np.genfromtxt(dist_file, dtype='S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12',
-                             delimiter=',', skip_header=1, names=columns, invalid_raise=False)
+        dist_file = tmp_file
     else:
-        #if line count less than max point number, read the srouce file
-        np_data = np.genfromtxt(source_file, dtype='S12, i4, i4, i4, i4, f8, f8, f6, f6, i4, i4, S12, S12',
-                             delimiter=',', skip_header=1, names=columns, invalid_raise=False)
+        dist_file = source_file
 
-    #print np_data
+    #read the data by numpy
+    np_data = np.genfromtxt(source_file, dtype=column_types, delimiter=',', 
+        skip_header=1, names=columns, invalid_raise=False)
+
     return np_data
 
 def draw_chart(np_data, title, x_column, y_column, unit=''):
 
     fig = plt.figure()
+    #设置图片尺寸，1600x900
     fig.set_size_inches(16, 9)
 
     ax1 = fig.add_subplot(111)
@@ -126,19 +136,15 @@ def process_x_labels(ax1, t_temp):
     idx = 0
     times = []
     length = len(t_temp)
-    #print 'length', length
 
     time_max_pt = len(labels)
-    #print 'time_max_points; ', time_max_pt
 
     t_step=length / time_max_pt
-    #print 't_step; ', t_step
 
     while(length > idx):
         times.append(t_temp[idx])
         idx += t_step
 
-    #print times
     return times
 
 def draw_all_charts():
