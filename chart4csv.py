@@ -7,9 +7,10 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
+#源文件
+source_file = 's3-yixin.csv'
+
 def process_title():
-     #源文件
-    source_file = 's1-yixin.csv'
     file_handler = open(source_file, 'r')
     row = file_handler.readline().strip().split(',')
     title_row = row[:7]
@@ -21,16 +22,15 @@ def process_title():
     file_handler.close()
 
     #method = ['rw'|read|wrire|]
-    method = 'rw'
     if len(method_row) == 5:
-        method = method_row[0]
+        method_mod = method_row[0]
+    else:
+        method_mod = 'rw'    
 
-    return title_row, method
+    return title_row, method_mod
 
 
-def process_data():
-    #源文件
-    source_file = 's3-yixin.csv'
+def process_data(title, method_mod):
     #当文件行数大于1000行，存放处理后的临时文件
     tmp_file = 'd3.csv'
     #交给numpy处理的数据文件
@@ -47,18 +47,31 @@ def process_data():
     step = count / maxPoints
     print 'step: ', step
 
+    #TODO
+    print 'title:', title
+    print 'method_mod:', method_mod
 
+    columns = []
+    column_types = ''
+    loop = len(title)
 
-    columns = ['timestamp', 'op_read', 'op_write', 'byte_read', 'byte_write', 'avg_read', 'avg_write',
-               'throughout_read', 'throughout_write', 'band_read', 'band_write', 'succ_read', 'succ_write']
-    #S=string, i=int, f=float           
-    column_types = 'S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12'        
+    if method_mod == 'read' or method_mod == 'write':
+        columns = ['timestamp', 'op', 'byte', 'avg', 'throughout', 'band', 'succ']
+        #S=string, i=int, f=float
+        column_types = 'S12, i4, i4, f12, f6, i4, S12'    
+    else:    
+        columns = ['timestamp', 'op_read', 'op_write', 'byte_read', 'byte_write', 'avg_read', 'avg_write',
+               'throughout_read', 'throughout_write', 'band_read', 'band_write', 'succ_read', 'succ_write']         
+        column_types = 'S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12' 
+
+    print 'columns:', columns
+    print 'column_types:', column_types                 
 
     row = 0
     # if point more than lines, choose part of lines, write to dist csv file
     if (count > maxPoints):
         f_src_data = open(source_file, 'r')
-        f_dst_data = open(dist_file, 'w')
+        f_dst_data = open(tmp_file, 'w')
         while(row <= count):
             line = f_src_data.readline()
             if (step == 0 or row % step == 0):
@@ -77,7 +90,7 @@ def process_data():
 
     return np_data
 
-def draw_chart(np_data, title, x_column, y_column, unit=''):
+def draw_chart(np_data, title, x_column, y_column, unit='', method='read'):
 
     fig = plt.figure()
     #设置图片尺寸，1600x900
@@ -89,10 +102,14 @@ def draw_chart(np_data, title, x_column, y_column, unit=''):
     else:
         ax1.set_title(title)
 
-    ax1.plot(np_data[x_column], c='red', label=title + ' read')
+    if method == 'rw':
+        ax1.plot(np_data[x_column], c='red', label=title + ' read')
+    else:
+        ax1.plot(np_data[x_column], c='red', label=title + ' ' + method)
 
-    ax2 = fig.add_subplot(111)
-    ax2.plot(np_data[y_column], c='blue', label=title + ' write')
+    if y_column is not None:
+        ax2 = fig.add_subplot(111)
+        ax2.plot(np_data[y_column], c='blue', label=title + ' write')
 
     #get and modify x axis label
     times = process_x_labels(ax1, np_data['timestamp'])
@@ -110,7 +127,7 @@ def draw_chart(np_data, title, x_column, y_column, unit=''):
     plt.savefig(title + '.png')
     print 'saved chart to ' + title + '.png'
 
-def draw_chart_percent(np_data, title, x_column, y_column):
+def draw_chart_percent(np_data, title, x_column, y_column, method='rw'):
 
     fig = plt.figure()
     fig.set_size_inches(16, 9)
@@ -125,20 +142,26 @@ def draw_chart_percent(np_data, title, x_column, y_column):
             x_temp.append(0)
         else:    
             x_temp.append(t.replace('%', ' ').strip())
-    for t in np_data[y_column]:
-        if t is None or t == 'N/A':
-            y_temp.append(0)   
-        else:
-            y_temp.append(t.replace('%', ' ').strip())
+       
+    if y_column is not None:
+        for t in np_data[y_column]:
+            if t is None or t == 'N/A':
+                y_temp.append(0)   
+            else:
+                y_temp.append(t.replace('%', ' ').strip())
 
     #set y axis max value is 101
     plt.ylim(ymin = 90, ymax = 101)
     plt.ylabel('% Percent')
 
-    ax1.plot(x_temp, c='red', label=title + ' read')
+    if method == 'rw':
+        ax1.plot(x_temp, c='red', label=title + ' read')
+    else:
+        ax1.plot(x_temp, c='red', label=title + method)
 
-    ax2 = fig.add_subplot(111)
-    ax2.plot(y_temp, c='blue', label=title + ' write')
+    if y_column is not None:
+        ax2 = fig.add_subplot(111)
+        ax2.plot(y_temp, c='blue', label=title + ' write')
 
     #get and modify x axis label
     times = process_x_labels(ax1, np_data['timestamp'])
@@ -172,16 +195,23 @@ def process_x_labels(ax1, t_temp):
 
 def draw_all_charts():
     #get data from csv file
-    title, method = process_title()
-    np_data = process_data()
+    title, method_mod = process_title()
+    np_data = process_data(title, method_mod)
 
-    draw_chart(np_data, 'Op-Count', 'op_read', 'op_write')
-    draw_chart(np_data, 'Byte-Count', 'byte_read', 'byte_write')
-    draw_chart(np_data, 'Avg-ResTime', 'avg_read', 'avg_write', 'ms')
-    draw_chart(np_data, 'Throughout', 'throughout_read', 'throughout_write')
-    draw_chart(np_data, 'Bandwidth', 'band_read', 'band_write')
-    draw_chart_percent(np_data, 'Succ-Ratio', 'succ_read', 'succ_write')
+    if method_mod == 'read' or method_mod == 'write':
+        draw_chart(np_data, 'Op-Count', 'op', None, method_mod)
+        draw_chart(np_data, 'Byte-Count', 'byte', None, method_mod)
+        draw_chart(np_data, 'Avg-ResTime', 'avg', None, 'ms', method_mod)
+        draw_chart(np_data, 'Throughout', 'throughout', None, method_mod)
+        draw_chart(np_data, 'Bandwidth', 'band', None, method_mod)
+        draw_chart_percent(np_data, 'Succ-Ratio', 'succ', None, method_mod)
+    else:
+        draw_chart(np_data, 'Op-Count', 'op_read', 'op_write')
+        draw_chart(np_data, 'Byte-Count', 'byte_read', 'byte_write')
+        draw_chart(np_data, 'Avg-ResTime', 'avg_read', 'avg_write', 'ms')
+        draw_chart(np_data, 'Throughout', 'throughout_read', 'throughout_write')
+        draw_chart(np_data, 'Bandwidth', 'band_read', 'band_write')
+        draw_chart_percent(np_data, 'Succ-Ratio', 'succ_read', 'succ_write')
 
 if __name__ == '__main__':
-    process_title()
-    #draw_all_charts()
+    draw_all_charts()
