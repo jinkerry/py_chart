@@ -7,6 +7,27 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
+def process_title():
+     #源文件
+    source_file = 's1-yixin.csv'
+    file_handler = open(source_file, 'r')
+    row = file_handler.readline().strip().split(',')
+    title_row = row[:7]
+    print title_row
+    row = file_handler.readline().strip().split(',')
+    method_row = row[1:-4]
+    print method_row
+
+    file_handler.close()
+
+    #method = ['rw'|read|wrire|]
+    method = 'rw'
+    if len(method_row) == 5:
+        method = method_row[0]
+
+    return title_row, method
+
+
 def process_data():
     #源文件
     source_file = 's3-yixin.csv'
@@ -26,10 +47,12 @@ def process_data():
     step = count / maxPoints
     print 'step: ', step
 
+
+
     columns = ['timestamp', 'op_read', 'op_write', 'byte_read', 'byte_write', 'avg_read', 'avg_write',
                'throughout_read', 'throughout_write', 'band_read', 'band_write', 'succ_read', 'succ_write']
     #S=string, i=int, f=float           
-    column_types = 'S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12'         
+    column_types = 'S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12'        
 
     row = 0
     # if point more than lines, choose part of lines, write to dist csv file
@@ -149,6 +172,7 @@ def process_x_labels(ax1, t_temp):
 
 def draw_all_charts():
     #get data from csv file
+    title, method = process_title()
     np_data = process_data()
 
     draw_chart(np_data, 'Op-Count', 'op_read', 'op_write')
@@ -159,4 +183,5 @@ def draw_all_charts():
     draw_chart_percent(np_data, 'Succ-Ratio', 'succ_read', 'succ_write')
 
 if __name__ == '__main__':
-    draw_all_charts()
+    process_title()
+    #draw_all_charts()
