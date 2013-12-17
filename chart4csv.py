@@ -49,7 +49,7 @@ def process_data():
         dist_file = source_file
 
     #read the data by numpy
-    np_data = np.genfromtxt(source_file, dtype=column_types, delimiter=',', 
+    np_data = np.genfromtxt(dist_file, dtype=column_types, delimiter=',', 
         skip_header=1, names=columns, invalid_raise=False)
 
     return np_data
