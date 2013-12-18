@@ -1,6 +1,7 @@
 #encoding=utf-8
 __author__ = 'jinfeng'
 
+import sys
 import numpy as np
 import matplotlib as mpl
 #关闭X-window
@@ -205,4 +206,6 @@ def draw_all_charts():
         draw_chart_percent(np_data, 'Succ-Ratio', 'succ_read', 'succ_write')
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        source_file = sys.argv[1]
     draw_all_charts()
