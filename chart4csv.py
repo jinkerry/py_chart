@@ -10,18 +10,18 @@ import matplotlib.pyplot as plt
 #源文件
 source_file = 's3-yixin.csv'
 
+
 def process_title():
+    #读取csv文件前两行
     file_handler = open(source_file, 'r')
     row = file_handler.readline().strip().split(',')
     title_row = row[:7]
-    print title_row
     row = file_handler.readline().strip().split(',')
     method_row = row[1:-4]
-    print method_row
 
     file_handler.close()
 
-    #method = ['rw'|read|wrire|]
+    #method = [rw|read|write|]
     if len(method_row) == 5:
         method_mod = method_row[0]
     else:
@@ -30,11 +30,9 @@ def process_title():
     return title_row, method_mod
 
 
-def process_data(title, method_mod):
+def process_data(method_mod):
     #当文件行数大于1000行，存放处理后的临时文件
     tmp_file = 'd3.csv'
-    #交给numpy处理的数据文件
-    dist_file = ''
     #每一张图最多画1000个数据点
     maxPoints = 1000
 
@@ -47,14 +45,6 @@ def process_data(title, method_mod):
     step = count / maxPoints
     print 'step: ', step
 
-    #TODO
-    print 'title:', title
-    print 'method_mod:', method_mod
-
-    columns = []
-    column_types = ''
-    loop = len(title)
-
     if method_mod == 'read' or method_mod == 'write':
         columns = ['timestamp', 'op', 'byte', 'avg', 'throughout', 'band', 'succ']
         #S=string, i=int, f=float
@@ -62,19 +52,16 @@ def process_data(title, method_mod):
     else:    
         columns = ['timestamp', 'op_read', 'op_write', 'byte_read', 'byte_write', 'avg_read', 'avg_write',
                'throughout_read', 'throughout_write', 'band_read', 'band_write', 'succ_read', 'succ_write']         
-        column_types = 'S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12' 
-
-    print 'columns:', columns
-    print 'column_types:', column_types                 
+        column_types = 'S12, i4, i4, i4, i4, f12, f12, f6, f6, i4, i4, S12, S12'
 
     row = 0
     # if point more than lines, choose part of lines, write to dist csv file
-    if (count > maxPoints):
+    if count > maxPoints:
         f_src_data = open(source_file, 'r')
         f_dst_data = open(tmp_file, 'w')
-        while(row <= count):
+        while row <= count:
             line = f_src_data.readline()
-            if (step == 0 or row % step == 0):
+            if step == 0 or row % step == 0:
                 f_dst_data.write(line)
             row += 1
         f_src_data.close()
@@ -85,10 +72,11 @@ def process_data(title, method_mod):
         dist_file = source_file
 
     #read the data by numpy
-    np_data = np.genfromtxt(dist_file, dtype=column_types, delimiter=',', 
-        skip_header=1, names=columns, invalid_raise=False)
+    np_data = np.genfromtxt(dist_file, dtype=column_types, delimiter=',', skip_header=2,
+                            names=columns, invalid_raise=False)
 
     return np_data
+
 
 def draw_chart(np_data, title, x_column, y_column, unit='', method='read'):
 
@@ -127,6 +115,7 @@ def draw_chart(np_data, title, x_column, y_column, unit='', method='read'):
     plt.savefig(title + '.png')
     print 'saved chart to ' + title + '.png'
 
+
 def draw_chart_percent(np_data, title, x_column, y_column, method='rw'):
 
     fig = plt.figure()
@@ -151,13 +140,13 @@ def draw_chart_percent(np_data, title, x_column, y_column, method='rw'):
                 y_temp.append(t.replace('%', ' ').strip())
 
     #set y axis max value is 101
-    plt.ylim(ymin = 90, ymax = 101)
+    plt.ylim(ymin=90, ymax=101)
     plt.ylabel('% Percent')
 
     if method == 'rw':
         ax1.plot(x_temp, c='red', label=title + ' read')
     else:
-        ax1.plot(x_temp, c='red', label=title + method)
+        ax1.plot(x_temp, c='red', label=title + ' ' + method)
 
     if y_column is not None:
         ax2 = fig.add_subplot(111)
@@ -175,6 +164,7 @@ def draw_chart_percent(np_data, title, x_column, y_column, method='rw'):
     plt.savefig(title + '.png')
     print 'saved chart to ' + title + '.png'
 
+
 def process_x_labels(ax1, t_temp):
     labels = [item.get_text() for item in ax1.get_xticklabels()]
     #print 'labels: ', labels
@@ -187,16 +177,17 @@ def process_x_labels(ax1, t_temp):
 
     t_step=length / time_max_pt
 
-    while(length > idx):
+    while length > idx:
         times.append(t_temp[idx])
         idx += t_step
 
     return times
 
+
 def draw_all_charts():
     #get data from csv file
     title, method_mod = process_title()
-    np_data = process_data(title, method_mod)
+    np_data = process_data(method_mod)
 
     if method_mod == 'read' or method_mod == 'write':
         draw_chart(np_data, 'Op-Count', 'op', None, method_mod)
