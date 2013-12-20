@@ -183,8 +183,14 @@ def process_x_labels(ax1, t_temp):
         idx += t_step
 
     #数据中的最后一个时间点作为横坐标
-    times.remove(times[-1])
-    times.remove(times[-1])
+    if time_max_pt <= 8:
+        loop = 3
+    else:
+        loop = 2    
+    for i in range(0, loop):
+        times.remove(times[-1])
+        print i
+
     times.append(t_temp[-1]) 
 
     return times
