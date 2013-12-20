@@ -167,8 +167,8 @@ def draw_chart_percent(np_data, title, x_column, y_column, method='rw'):
 
 
 def process_x_labels(ax1, t_temp):
+    #获取默认的横坐标的信息
     labels = [item.get_text() for item in ax1.get_xticklabels()]
-    #print 'labels: ', labels
 
     idx = 0
     times = []
@@ -178,9 +178,14 @@ def process_x_labels(ax1, t_temp):
 
     t_step=length / time_max_pt
 
-    while length > idx:
+    while idx < length:
         times.append(t_temp[idx])
         idx += t_step
+
+    #数据中的最后一个时间点作为横坐标
+    times.remove(times[-1])
+    times.remove(times[-1])
+    times.append(t_temp[-1]) 
 
     return times
 
